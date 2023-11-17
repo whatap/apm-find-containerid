@@ -1,5 +1,6 @@
-# 기본 이미지로 OpenJDK 17을 사용합니다.
-FROM openjdk:17-jdk-headless
+FROM ubuntu:20.04
+
+RUN apt install -y curl procps net-tools tcptraceroute openjdk-17-jdk-headless
 
 # 애플리케이션을 실행할 디렉토리를 생성합니다.
 WORKDIR /usr/src/app
