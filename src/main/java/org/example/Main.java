@@ -61,7 +61,7 @@ public class Main {
             System.out.println("container with WHATAP_JAVA_APM_IN_CLUSTER registered does exist :  apmContainerName=" + apmContainerName + "//apmContainerId=" + apmContainerId);
 
         } catch (ApiException e){
-            System.err.println("API 호출에 실패했습니다. 권한이 부족하거나 API 서버에 문제가 있을 수 있습니다.");
+            System.err.println("API 호출에 실패했습니다. 권한이 부족하거나 API 서버에 문제가 있을 수 있습니다."+"statusCode="+ e.getCode());
             e.printStackTrace();
         } catch (Exception e){
             System.err.println("알 수 없는 오류가 발생했습니다.");
