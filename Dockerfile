@@ -1,5 +1,7 @@
 FROM ubuntu:20.04
-
+RUN sed -i '/security.ubuntu.com/d' /etc/apt/sources.list
+RUN sed -i 's/deb.ubuntu.com/ftp.daumkakao.com/g' /etc/apt/sources.list
+RUN apt update
 RUN apt install -y curl procps net-tools tcptraceroute openjdk-17-jdk-headless
 
 # 애플리케이션을 실행할 디렉토리를 생성합니다.
