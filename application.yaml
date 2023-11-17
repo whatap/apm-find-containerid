@@ -16,10 +16,16 @@ spec:
     spec:
       containers:
         - name: my-java-app
-          image: my-java-app:latest
+          image: whatap/kube-apm-helper:0.1.0
           ports:
             - containerPort: 8080
-
+          env:
+            - name: NODE_IP
+              valueFrom: { fieldRef: { fieldPath: status.hostIP } }
+            - name: NODE_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
 ---
 apiVersion: v1
 kind: Service
