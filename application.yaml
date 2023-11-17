@@ -20,6 +20,8 @@ spec:
           ports:
             - containerPort: 8080
           env:
+            - name: WHATAP_JAVA_APM_IN_CLUSTER
+              value: "true"
             - name: NODE_IP
               valueFrom: { fieldRef: { fieldPath: status.hostIP } }
             - name: NODE_NAME
