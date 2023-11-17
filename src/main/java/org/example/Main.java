@@ -48,7 +48,7 @@ public class Main {
 
             String apmContainerName = getApmContainerName(containers);
             if (apmContainerName == null) {
-                System.out.println("WHATAP_JAVA_APM_IN_CLUSTER 가 등록된 컨테이너가 존재하지 않음");
+                System.out.println("Container with WHATAP_JAVA_APM_IN_CLUSTER registered does not exist");
                 return;
             }
 
@@ -61,10 +61,10 @@ public class Main {
             System.out.println("container with WHATAP_JAVA_APM_IN_CLUSTER registered does exist :  apmContainerName=" + apmContainerName + "//apmContainerId=" + apmContainerId);
 
         } catch (ApiException e){
-            System.err.println("API 호출에 실패했습니다. 권한이 부족하거나 API 서버에 문제가 있을 수 있습니다."+"statusCode="+ e.getCode());
+            System.err.println("API request failed. You may have insufficient permissions or there may be a problem with the API server:"+"statusCode="+ e.getCode());
             e.printStackTrace();
         } catch (Exception e){
-            System.err.println("알 수 없는 오류가 발생했습니다.");
+            System.err.println("An unknown error occurred.");
             e.printStackTrace();
         }
     }
