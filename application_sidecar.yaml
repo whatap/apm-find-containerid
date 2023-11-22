@@ -41,7 +41,8 @@ spec:
               mountPath: /run/containerd/containerd.sock
       volumes:
         - hostPath:
-            name:
+            name: pod_path
             path: /var/lib/kubelet/pods
         - hostPath:
+            name: containerddomainsocket
             path: /run/containerd/container.sock
