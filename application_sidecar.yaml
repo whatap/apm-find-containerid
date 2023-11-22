@@ -32,10 +32,10 @@ spec:
             - name: POD_ID
               valueFrom: { fieldRef: { fieldPath: metadata.uid } }
           volumeMounts:
-            - name: pod_path
+            - name: pod-path
               mountPath: /var/lib/kubelet/pods
       volumes:
-        - name: pod_path
+        - name: pod-path
           hostPath:
             path: /var/lib/kubelet/pods
         - name: containerddomainsocket
