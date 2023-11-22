@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-java-app-deployment
-  namespace: whatap-monitoring
   labels:
     app: my-java-app
 spec:
