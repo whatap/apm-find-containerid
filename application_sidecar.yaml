@@ -18,12 +18,11 @@ spec:
       containers:
         - name: my-java-app
           image: whatap/kube-apm-helper:0.1.0
-          command: ["sleep", "100000"]
           ports:
             - containerPort: 8080
           env:
-            - name: WHATAP_JAVA_APM_IN_CLUSTER
-              value: "true"
+            - name: WTP_CON_NAME
+              value: "my-java-app"
             - name: NODE_IP
               valueFrom: { fieldRef: { fieldPath: status.hostIP } }
             - name: NODE_NAME
@@ -32,17 +31,13 @@ spec:
               valueFrom: { fieldRef: { fieldPath: metadata.name } }
             - name: POD_ID
               valueFrom: { fieldRef: { fieldPath: metadata.uid } }
-            - name: CONTAINER_NAME
-              valueFrom: { fieldRef: { fieldPath: spec.containers[0].name } }
           volumeMounts:
             - name: pod_path
               mountPath: /var/lib/kubelet/pods
-            - name: containerddomainsocket
-              mountPath: /run/containerd/containerd.sock
       volumes:
-        - hostPath:
-            name: pod_path
+        - name: pod_path
+          hostPath:
             path: /var/lib/kubelet/pods
-        - hostPath:
-            name: containerddomainsocket
+        - name: containerddomainsocket
+          hostPath:
             path: /run/containerd/container.sock
