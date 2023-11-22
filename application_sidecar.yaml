@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-java-app-deployment
+  namespace: whatap-monitoring
+  labels:
+    app: my-java-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-java-app
+  template:
+    metadata:
+      labels:
+        app: my-java-app
+    spec:
+      containers:
+        - name: my-java-app
+          image: whatap/kube-apm-helper:0.1.0
+          command: ["sleep", "100000"]
+          ports:
+            - containerPort: 8080
+          env:
+            - name: WHATAP_JAVA_APM_IN_CLUSTER
+              value: "true"
+            - name: NODE_IP
+              valueFrom: { fieldRef: { fieldPath: status.hostIP } }
+            - name: NODE_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+            - name: POD_NAME
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: POD_ID
+              valueFrom: { fieldRef: { fieldPath: metadata.uid } }
+            - name: CONTAINER_NAME
+              valueFrom: { fieldRef: { fieldPath: spec.containers[0].name } }
+          volumeMounts:
+            - name: pod_path
+              mountPath: /var/lib/kubelet/pods
+            - name: containerddomainsocket
+              mountPath: /run/containerd/containerd.sock
+      volumes:
+        - hostPath:
+            name:
+            path: /var/lib/kubelet/pods
+        - hostPath:
+            path: /run/containerd/container.sock
