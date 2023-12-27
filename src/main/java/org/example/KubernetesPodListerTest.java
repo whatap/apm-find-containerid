@@ -18,7 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class KubernetesPodListerTest {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         String KUBERNETES_SERVICE_HOST = System.getenv("KUBERNETES_SERVICE_HOST");
         String KUBERNETES_PORT_443_TCP_PORT = System.getenv("KUBERNETES_PORT_443_TCP_PORT");
 
@@ -112,8 +112,7 @@ public class KubernetesPodListerTest {
                     JsonObject envObject = envVariable.getAsJsonObject();
                     String envName = envObject.get("name").getAsString();
                     String envValue = envObject.get("value").getAsString();
-                    if ("GET_CONTAINER_ID_USING_WHATAP".equals(envName) && "true".equalsIgnoreCase(envValue)) {
-
+                    if ("get_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
                         // 컨테이너 ID를 찾아 출력.
                         String containerName = containerObject.get("name").getAsString();
                         JsonArray containerStatuses = podObject.getAsJsonObject("status").getAsJsonArray("containerStatuses");
@@ -129,6 +128,8 @@ public class KubernetesPodListerTest {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            Thread.sleep(36000);
         }
     }
     private static OkHttpClient getUnsafeOkHttpClient() {
