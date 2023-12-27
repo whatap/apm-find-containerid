@@ -8,7 +8,7 @@ RUN apt install -y curl procps net-tools tcptraceroute openjdk-17-jdk-headless
 WORKDIR /usr/src/app
 
 # JAR 파일을 컨테이너로 복사합니다.
-COPY target/kube-apm-helper-1.0.6.jar /usr/src/app
+COPY target/kube-apm-helper-1.0.7.jar /usr/src/app
 
 # 컨테이너가 시작될 때 실행할 명령어를 설정합니다.
-ENTRYPOINT ["java", "-jar", "/usr/src/app/kube-apm-helper-1.0.6.jar"]
+ENTRYPOINT ["java", "-jar", "/usr/src/app/kube-apm-helper-1.0.7.jar"]
