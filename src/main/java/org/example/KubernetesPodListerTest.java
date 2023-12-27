@@ -120,7 +120,14 @@ public class KubernetesPodListerTest {
                             JsonObject containerStatusObject = containerStatus.getAsJsonObject();
                             if (containerName.equals(containerStatusObject.get("name").getAsString())) {
                                 String containerId = containerStatusObject.get("containerID").getAsString();
-                                System.out.println("Container ID: " + containerId);
+                                System.out.println("POD NAME: " + podName);
+                                String[] tokens = containerId.split("://");
+                                if (tokens.length > 1){
+                                    String id = tokens[1];
+                                    System.out.println("Container ID: " + id);
+                                }else{
+                                    System.out.println("Container parsing failed:" + containerId);
+                                }
                             }
                         }
                     }
