@@ -103,22 +103,26 @@ public class KubernetesPodListerTest {
             Gson gson = new Gson();
             JsonObject podObject = gson.fromJson(jsonResponse, JsonObject.class);
 
-            // 파드 컨테이너 목록 List.
+            // 환경변수를 확인하여 GET_CONTAINER_ID_USING_WHATAP 변수를 가진 컨테이너 찾기
             JsonArray containers = podObject.getAsJsonObject("spec").getAsJsonArray("containers");
             for (JsonElement container : containers) {
                 JsonObject containerObject = container.getAsJsonObject();
-                String containerId = containerObject.get("name").getAsString();
-
-                // 환경 변수 확인
                 JsonArray envVariables = containerObject.getAsJsonArray("env");
-                if (envVariables != null) {
-                    for (JsonElement envVar : envVariables) {
-                        JsonObject envObject = envVar.getAsJsonObject();
-                        String envName = envObject.get("name").getAsString();
-                        String envValue = envObject.get("value").getAsString();
-                        if ("GET_CONTAINER_ID_USING_WHATAP".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
-                            // 해당 환경 변수를 가진 컨테이너의 ID를 출력
-                            System.out.println("Container ID with GET_CONTAINER_ID_USING_WHATAP: " + containerId);
+                for (JsonElement envVariable : envVariables) {
+                    JsonObject envObject = envVariable.getAsJsonObject();
+                    String envName = envObject.get("name").getAsString();
+                    String envValue = envObject.get("value").getAsString();
+                    if ("GET_CONTAINER_ID_USING_WHATAP".equals(envName) && "true".equalsIgnoreCase(envValue)) {
+
+                        // 컨테이너 ID를 찾아 출력.
+                        String containerName = containerObject.get("name").getAsString();
+                        JsonArray containerStatuses = podObject.getAsJsonObject("status").getAsJsonArray("containerStatuses");
+                        for (JsonElement containerStatus : containerStatuses) {
+                            JsonObject containerStatusObject = containerStatus.getAsJsonObject();
+                            if (containerName.equals(containerStatusObject.get("name").getAsString())) {
+                                String containerId = containerStatusObject.get("containerID").getAsString();
+                                System.out.println("Container ID: " + containerId);
+                            }
                         }
                     }
                 }
