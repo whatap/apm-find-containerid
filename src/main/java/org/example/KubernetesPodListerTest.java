@@ -27,13 +27,13 @@ public class KubernetesPodListerTest {
             return;
         }
 
-        // GET_CONTAINER_ID_USING_WHATAP, POD_NAME 환경변수 가져오기
-        String getContainerIdUsingWhatap = System.getenv("GET_CONTAINER_ID_USING_WHATAP");
+        // get_apm_container_id_using_whatap, POD_NAME 환경변수 가져오기
+        String getContainerIdUsingWhatap = System.getenv("get_apm_container_id_using_whatap");
         String podName = System.getenv("POD_NAME");
 
         // getContainerIdUsingWhatap 환경변수가 설정되지 않거나 false 이면 동작하지 않는다.
         if (getContainerIdUsingWhatap == null || "false".equalsIgnoreCase(getContainerIdUsingWhatap)) {
-            System.out.println("If you want to find the containerId using a Whatap, you must set the GET_CONTAINER_ID_USING_WHATAP environment variable to true. Currently, this value is " + getContainerIdUsingWhatap);
+            System.out.println("If you want to find the containerId using a Whatap, you must set the get_apm_container_id_using_whatap environment variable to true. Currently, this value is " + getContainerIdUsingWhatap);
             return;
         }
 
@@ -103,7 +103,7 @@ public class KubernetesPodListerTest {
             Gson gson = new Gson();
             JsonObject podObject = gson.fromJson(jsonResponse, JsonObject.class);
 
-            // 환경변수를 확인하여 GET_CONTAINER_ID_USING_WHATAP 변수를 가진 컨테이너 찾기
+            // 환경변수를 확인하여 get_container_id_using_whatap 변수를 가진 컨테이너 찾기
             JsonArray containers = podObject.getAsJsonObject("spec").getAsJsonArray("containers");
             for (JsonElement container : containers) {
                 JsonObject containerObject = container.getAsJsonObject();
@@ -112,7 +112,7 @@ public class KubernetesPodListerTest {
                     JsonObject envObject = envVariable.getAsJsonObject();
                     String envName = envObject.get("name").getAsString();
                     String envValue = envObject.get("value").getAsString();
-                    if ("get_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
+                    if ("get_apm_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
                         // 컨테이너 ID를 찾아 출력.
                         String containerName = containerObject.get("name").getAsString();
                         JsonArray containerStatuses = podObject.getAsJsonObject("status").getAsJsonArray("containerStatuses");

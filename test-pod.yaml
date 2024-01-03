@@ -12,7 +12,7 @@ spec:
     name: test-container
     resources: {}
     env:
-    - name: GET_CONTAINER_ID_USING_WHATAP
+    - name: get_apm_container_id_using_whatap
       value: "true"
   dnsPolicy: ClusterFirst
   restartPolicy: Always
