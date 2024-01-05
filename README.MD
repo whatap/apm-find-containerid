@@ -15,7 +15,7 @@ kubectl set image -n whatap-monitoring daemonset whatap-node-agent whatap-node-a
 kubectl patch daemonset -n whatap-monitoring whatap-node-agent --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/1/volumeMounts/0/readOnly", "value":false}]'
 ```
 
-### 2. 테스트 파드(container-id 출력) 배포 
+### 2. 테스트 파드(container-id 출력) 배포
 ```yaml
 apiVersion: v1
 kind: Pod
