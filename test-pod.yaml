@@ -7,8 +7,8 @@ metadata:
   name: apm-helper
 spec:
   containers:
-    - image: registry.whatap.io:5000/kube-apm-helper:1.1.3
-      name: apm-helper-container
+    - image: whatap/apm-find-containerid:latest
+      name: apm-find-containerid
       resources: {}
       env:
         - name: get_apm_container_id_using_whatap
