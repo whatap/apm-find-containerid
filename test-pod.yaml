@@ -3,18 +3,29 @@ kind: Pod
 metadata:
   creationTimestamp: null
   labels:
-    run: test-pod
-  name: test-pod
+    run: apm-helper
+  name: apm-helper
 spec:
-  serviceAccountName: jykim
   containers:
-  - image: nginx
-    name: test-container
-    resources: {}
-    env:
-    - name: get_apm_container_id_using_whatap
-      value: "true"
+    - image: registry.whatap.io:5000/kube-apm-helper:1.1.3
+      name: apm-helper-container
+      resources: {}
+      env:
+        - name: get_apm_container_id_using_whatap
+          value: "true"
+        - name: NODE_IP
+          valueFrom: { fieldRef: { fieldPath: status.hostIP } }
+        - name: NODE_NAME
+          valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+        - name: POD_NAME
+          valueFrom: { fieldRef: { fieldPath: metadata.name } }
+      volumeMounts:
+        - name: whatap
+          mountPath: /whatap
   dnsPolicy: ClusterFirst
-  restartPolicy: Always
+  restartPolicy: Never
+  volumes:
+    - name: whatap
+      hostPath:
+        path: /whatap
 status: {}
-
