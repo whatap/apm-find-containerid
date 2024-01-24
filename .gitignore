@@ -38,3 +38,4 @@ build/
 ### Mac OS ###
 .DS_Store
 whatap_kube_containerd_1.16.yaml
+.idea/

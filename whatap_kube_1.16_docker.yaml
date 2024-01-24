@@ -1,0 +1,308 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: whatap-monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: whatap
+  namespace: whatap-monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "true"
+  name: whatap
+  namespace: whatap-monitoring
+rules:
+  - apiGroups: ["*"]
+    resources: ["namespaces", "pods", "pods/log", "configmaps","services", "endpoints","daemonsets","ingresses","deployments","nodes","persistentvolumes","persistentvolumeclaims", "events", "replicasets", "roles", "rolebindings", "clusterroles", "clusterrolebindings", "jobs", "cronjobs", "statefulsets", "serviceaccounts", "configmaps", "storageclasses", "horizontalpodautoscalers" ]
+    verbs: ["get","list","watch"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["*"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: node-start-script
+  namespace: whatap-monitoring
+data:
+  entrypoint.sh: |-
+    #!/usr/bin/env bash
+
+    cat >/whatap_conf/whatap.node.conf <<EOL
+    license=$WHATAP_LICENSE
+    whatap.server.host=$WHATAP_HOST
+    whatap.server.port=$WHATAP_PORT
+    imageignore=k8s.gcr.io/pause:3.1,docker.io/openshift/origin-pod:v3.11.0
+    commandignore=/pause,/usr/bin/pod
+    whatap.name={nodename}
+    helper_embedded=false
+    EOL
+
+    heapsize=$(echo "0.45 $WHATP_MEM_LIMIT" | awk '{print int($1 * $2 / 1048576)}')
+    JAVA_OPTS="-Xms${heapsize}m -Xmx${heapsize}m"
+    JAVA_OPTS="$JAVA_OPTS -XX:+UseG1GC -XX:+UseStringDeduplication  -XX:+ExitOnOutOfMemoryError -XshowSettings:vm"
+    JAVA_OPTS="$JAVA_OPTS -Dwhatap.home=/whatap_conf"
+    
+    java $JAVA_OPTS -jar /data/agent/node/whatap.kube.node-*.jar
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: whatap
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: whatap
+subjects:
+  - kind: ServiceAccount
+    name: whatap
+    namespace: whatap-monitoring
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: whatap-node-agent
+  namespace: whatap-monitoring
+  labels:
+    name: whatap-node-agent
+spec:
+  selector:
+    matchLabels:
+      name: whatap-node-agent
+  template:
+    metadata:
+      labels:
+        name: whatap-node-agent
+    spec:
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      initContainers:
+        - name: whatap-node-debug
+          image: whatap/kube_mon
+          command: ['/data/agent/tools/whatap_debugger', 'run']
+          volumeMounts:
+            - name: rootfs
+              mountPath: /rootfs
+              readOnly: true
+      containers:
+        - name: whatap-node-helper
+          image: whatap/kube_mon
+          resources:
+            requests:
+              memory: 300Mi
+              cpu: 300m
+            limits:
+              memory: 300Mi
+              cpu: 300m
+          ports:
+            - name: helperport
+              containerPort: 6801
+          command: ['/data/agent/node/cadvisor_helper', '-port','6801']
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: dockerdomainsocket
+              mountPath: /var/run/docker.sock
+            - name: rootfs
+              mountPath: /rootfs
+              readOnly: true
+            - name: hostsys
+              mountPath: /sys
+              readOnly: true
+            - name: hostdiskdevice
+              mountPath: /dev/disk
+              readOnly: true
+        - name: whatap-node-agent
+          image: whatap/kube_mon
+          resources:
+            requests:
+              memory: 400Mi
+              cpu: 400m
+            limits:
+              memory: 450Mi
+              cpu: 400m
+          ports:
+            - name: nodeport
+              containerPort: 6600
+          command: ['/bin/entrypoint.sh']
+          env:
+            - name: collect_apiserver_metric_by_leader
+              value: "true"
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: WHATAP_LICENSE
+              value: "x423h2197u810-x1jh0prkj2ofme-z2v3cc6u6r6fjk"
+            - name: WHATAP_HOST
+              value: "15.165.146.117"
+            - name: WHATAP_PORT
+              value: "6600"
+            - name: HOST_PREFIX
+              value: "/rootfs"
+            - name: WHATP_MEM_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: whatap-node-agent
+                  resource: limits.memory
+          volumeMounts:
+            - name: rootfs
+              mountPath: /rootfs
+              readOnly: true
+            - name: start-script-volume
+              mountPath: /bin/entrypoint.sh
+              readOnly: true
+              subPath: entrypoint.sh
+            - mountPath: /whatap_conf
+              name: whatap-config-volume
+      volumes:
+        - hostPath:
+            path: /var/run/docker.sock
+          name: dockerdomainsocket
+        - hostPath:
+            path: /
+          name: rootfs
+        - hostPath:
+            path: /sys
+          name: hostsys
+        - hostPath:
+            path: /var/lib/docker
+          name: hostdocker
+        - hostPath:
+            path: /dev/disk
+          name: hostdiskdevice
+        - name: start-script-volume
+          configMap:
+            defaultMode: 0700
+            name: node-start-script
+        - name: whatap-config-volume
+          emptyDir: {}
+      serviceAccount: whatap
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: master-start-script
+  namespace: whatap-monitoring
+data:
+  entrypoint.sh: |-
+    #!/usr/bin/env bash
+    
+    mkdir /whatap_conf/confbase -p
+    if [ ! -f /whatap_conf/confbase/whatap_server.conf ]; then
+    cat >/whatap_conf/confbase/whatap_server.conf <<EOL
+    license=$WHATAP_LICENSE
+    whatap.server.host=$WHATAP_HOST
+    whatap.server.port=$WHATAP_PORT
+    EOL
+    fi
+    
+    if [ ! -f /whatap_conf/whatap.master.conf ]; then
+    cat >/whatap_conf/whatap.master.conf <<EOL
+    master_agent_port=6600
+    license=$WHATAP_LICENSE
+    whatap.server.host=$WHATAP_HOST
+    whatap.server.port=$WHATAP_PORT
+    confbase_backup_enabled=true
+    EOL
+    fi
+
+    heapsize=$(echo "0.45 $WHATP_MEM_LIMIT" | awk '{print int($1 * $2 / 1048576)}')
+    JAVA_OPTS="-Xms${heapsize}m -Xmx${heapsize}m"
+    JAVA_OPTS="$JAVA_OPTS -XX:+UseG1GC -XX:+UseStringDeduplication  -XX:+ExitOnOutOfMemoryError -XshowSettings:vm"
+    JAVA_OPTS="$JAVA_OPTS -Dwhatap.home=/whatap_conf"
+    
+    java $JAVA_OPTS -cp /data/agent/confbase/whatap.agent.confbase-1.0.0.jar:/data/agent/master/whatap.kube.master-1.0.1.jar whatap.agent.App
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatap-master-agent
+  namespace: whatap-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: whatap-master-agent
+  template:
+    metadata:
+      labels:
+        name: whatap-master-agent
+    spec:
+      containers:
+        - name: whatap-master-agent
+          image: whatap/kube_mon
+          resources:
+            requests:
+              memory: 400Mi
+              cpu: 400m
+            limits:
+              memory: 400Mi
+              cpu: 400m
+          ports:
+            - containerPort: 6600
+          command: ['/bin/entrypoint.sh']
+          env:
+            - name: "collect_apiserver_metric_by_leader"
+              value: "true"
+            - name: WHATAP_LICENSE
+              value: "x423h2197u810-x1jh0prkj2ofme-z2v3cc6u6r6fjk"
+            - name: WHATAP_HOST
+              value: "15.165.146.117"
+            - name: WHATAP_PORT
+              value: "6600"
+            - name: WHATP_MEM_LIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: whatap-master-agent
+                  resource: limits.memory
+          volumeMounts:
+            - name: start-script-volume
+              mountPath: /bin/entrypoint.sh
+              readOnly: true
+              subPath: entrypoint.sh
+            - mountPath: /whatap_conf
+              name: whatap-config-volume              
+      volumes:
+        - name: start-script-volume
+          configMap:
+            defaultMode: 0700
+            name: master-start-script
+        - name: whatap-config-volume
+          emptyDir: {}
+      serviceAccount: whatap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: whatap-monitoring
+  labels:
+    run: whatap-master-agent
+  name: whatap-master-agent
+spec:
+  clusterIP: None
+  ports:
+    - port: 6600
+      protocol: TCP
+      name: tcp-whatap-master-agent
+    - port: 6800
+      protocol: TCP
+      name: tcp-whatap-confbase
+  selector:
+    name: whatap-master-agent
