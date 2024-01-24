@@ -199,14 +199,18 @@ public class KubeApiClient extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (this.basePath == null || this.localPodName == null || this.localNamespace == null || this.whatapToken == null || this.localSSLContext == null){
+            if (this.basePath == null || this.localPodName == null || this.localNamespace == null || this.localSSLContext == null){
                 System.out.println("basePath=" + this.basePath);
                 System.out.println("localPodName=" + this.localPodName);
                 System.out.println("localNamespace=" + this.localNamespace);
-                System.out.println("whatapToken=" + this.whatapToken);
                 System.out.println("localSSLContext=" + this.localSSLContext);
                 return;
             }
+            if (this.whatapToken == null){
+                this.setWhatapToken();
+                continue;
+            }
+
             try {
                 process();
             } catch (Exception e) {

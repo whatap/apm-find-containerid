@@ -4,9 +4,9 @@
 ### 1. 쿠버네티스 에이전트 설치
 1.1 와탭 쿠버네티스 에이전트 설치
 
-1.2 쿠버네티스 에이전트(whatap-node-agent) 이미지 변경 
+1.2 쿠버네티스 에이전트(whatap-node-agent) 1.5.0 이상 적용 가능 
 ```bash
-kubectl set image -n whatap-monitoring daemonset whatap-node-agent whatap-node-agent=whatap/kube-apm-helper:0.1.1
+kubectl set image -n whatap-monitoring daemonset whatap-node-agent whatap-node-agent=whatap/kube_mon:1.5.0
 ```
 
 1.3 데몬셋으로 배포된 whatap-node-agent 파드 볼륨에 대한 권한 변경
