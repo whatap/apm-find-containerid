@@ -207,6 +207,7 @@ public class KubeApiClient extends Thread {
                 return;
             }
             if (this.whatapToken == null){
+                System.out.println("whatapToken=" + this.whatapToken);
                 this.setWhatapToken();
                 continue;
             }
