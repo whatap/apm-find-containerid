@@ -289,7 +289,7 @@ public class KubeApiClient extends Thread {
                 JSONArray envVariables = container.optJSONArray("env");
                 System.out.println("envVariables:" + envVariables);
                 for (int j = 0; j < envVariables.length(); j++) {
-                    JSONObject envObject = envVariables.optJSONObject(i);
+                    JSONObject envObject = envVariables.optJSONObject(j);
                     System.out.println("envObjectTest:" + envObject);
                     String envName = envObject.getString("name");
                     String envValue = envObject.getString("value");
