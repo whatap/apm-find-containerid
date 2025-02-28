@@ -94,7 +94,12 @@ public class KubeApiClient extends Thread {
         } catch (UnknownHostException e) {
             System.out.println("setLocalPodNameError="+e.getMessage());
         }
+        if (this.localPodName == null) {
+            System.out.println("set PodNAME by ENV(POD_NAME)");
+            this.localPodName = System.getenv("POD_NAME");
+        }
     }
+
     private void setLocalNamespace() {
         // apiserver에 요청하기 위해 필요한 데이터 path 가져오기 (namespace)
         Path namespacePath = Paths.get(LOCAL_NAMESPACE_PATH);

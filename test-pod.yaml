@@ -11,6 +11,10 @@ spec:
       name: apm-find-containerid
       resources: {}
       env:
+        - name: use_client
+          value: "true"
+        - name: kube_apiserver_monitoring_enabled
+          value: "true"
         - name: get_apm_container_id_using_whatap
           value: "true"
         - name: NODE_IP
