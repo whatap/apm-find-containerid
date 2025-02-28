@@ -278,6 +278,7 @@ public class KubeApiClient extends Thread {
                 String containerID = containerStatus.getString("containerID");
                 containerLookup.put(containerName, containerID);
                 System.out.println("containerName=" + containerName + "/// containerId=" + containerID);
+                System.out.println("containerLookup=" + containerLookup);
             }
         }
 
@@ -293,11 +294,11 @@ public class KubeApiClient extends Thread {
                     String envValue = envObject.getString("value");
                     if ("get_apm_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
                         String containerName = container.getString("name");
+                        System.out.println("container.getString('name')=" + containerName);
                         String containerID = containerLookup.get(containerName);
                         String[] tokens = containerID.split("://");
                         if (tokens.length > 1) {
-                            String id = tokens[1];
-                            return id;
+                            return tokens[1];
                         } else {
                             System.out.println("Container parsing failed:" + containerID);
                         }
