@@ -36,10 +36,8 @@ public class KubeApiClient extends Thread {
     private static final String WHATAP_TOKEN_PATH = "/whatap/token";
     private static final String LOCAL_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
     private static final String LOCAL_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
-//    private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
-//    private static final String KUBERNETES_SERVICE_PORT = "KUBERNETES_SERVICE_PORT";
-    private static final String KUBERNETES_SERVICE_HOST = "TEST_HOST";
-    private static final String KUBERNETES_SERVICE_PORT = "TEST_PORT";
+    private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
+    private static final String KUBERNETES_SERVICE_PORT = "KUBERNETES_SERVICE_PORT";
 
     private String localNamespace = null;
     private String localPodName = null;

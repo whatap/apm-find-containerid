@@ -32,12 +32,14 @@ public class KubeApiClientTest extends Thread {
 
     private static KubeApiClientTest instance = null;
 
-    //    public static final String SERVICEACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
-    private static final String WHATAP_TOKEN_PATH = "./whatap/token";
-    private static final String LOCAL_CA_PATH = "./whatap/ca.crt";
-    private static final String LOCAL_NAMESPACE_PATH = "./whatap/namespace";
-    private static final String KUBERNETES_SERVICE_HOST = "localhost";
-    private static final String KUBERNETES_SERVICE_PORT = "57531";
+    public static final String SERVICEACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    private static final String WHATAP_TOKEN_PATH = "/whatap/token";
+    private static final String LOCAL_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
+    private static final String LOCAL_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
+    //    private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
+//    private static final String KUBERNETES_SERVICE_PORT = "KUBERNETES_SERVICE_PORT";
+    private static final String KUBERNETES_SERVICE_HOST = "TEST_HOST";
+    private static final String KUBERNETES_SERVICE_PORT = "TEST_PORT";
 
     private String localNamespace = null;
     private String localPodName = null;
@@ -62,9 +64,19 @@ public class KubeApiClientTest extends Thread {
     }
 
     private void init() {
+        // kubernetes 내부 host 와 path 를 환경변수에서 가져옴
+        String host = System.getenv(KUBERNETES_SERVICE_HOST);
+        String port = System.getenv(KUBERNETES_SERVICE_PORT);
+        host = "10.21.10.71";
+        port = "443";
+
+        if (host == null || port == null) {
+            return;
+        }
+
         // 기본적인 쿠버네티스 클러스터 구성 정보 설정
         // 파드 이름, api-server, 네임스페이스, token, caCrt
-        this.setBasePath(KUBERNETES_SERVICE_HOST, KUBERNETES_SERVICE_PORT);
+        this.setBasePath(host, port);
         this.setLocalPodName();
         this.setLocalNamespace();
         this.setWhatapToken();
@@ -76,7 +88,18 @@ public class KubeApiClientTest extends Thread {
     }
 
     private void setLocalPodName(){
-        this.localPodName = "apm-helper";
+        try {
+            // https://kubernetes.io/docs/concepts/containers/container-environment/
+            // The hostname of a Container is the name of the Pod in which the Container is running.
+            // It is available through the hostname command or the gethostname function call in libc.
+            this.localPodName = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            System.out.println("setLocalPodNameError="+e.getMessage());
+        }
+        if (this.localPodName == null) {
+            System.out.println("set PodNAME by ENV(POD_NAME)");
+            this.localPodName = System.getenv("POD_NAME");
+        }
     }
     private void setLocalNamespace() {
         // apiserver에 요청하기 위해 필요한 데이터 path 가져오기 (namespace)
@@ -97,21 +120,24 @@ public class KubeApiClientTest extends Thread {
         }
     }
     private void setWhatapToken() {
+        String token = System.getenv("WHATAP_TOKEN");
+        if (token != null) {
+            this.whatapToken = token;
+            return;
+        }
+
         // apiserver에 요청하기 위해 필요한 데이터 path 가져오기 (token)
         Path tokenPath = Paths.get(WHATAP_TOKEN_PATH);
 
-        // token path가 존재하지 않는 경우 return
+        // token path가 존재하지 않는 경우 SERVICEACCOUNT_TOKEN_PATH 사용
         if (!Files.exists(tokenPath)) {
-            System.out.println("Whatap token is not found");
-        } else {
-            // token path가 존재하는 경우 값을 읽어온다.
-            try {
-                this.whatapToken = new String(Files.readAllBytes(tokenPath));
-            } catch (IOException e) {
-                System.out.println("Error occured while reading whatap token=" + e.getMessage());
-                return;
-            }
-            System.out.println("WHATAP token=" + this.whatapToken);
+            System.out.println("Whatap token is not found// use SERVICEACCOUNT_TOKEN_PATH");
+            tokenPath = Paths.get(SERVICEACCOUNT_TOKEN_PATH);
+        }
+        try {
+            this.whatapToken = new String(Files.readAllBytes(tokenPath));
+        } catch (IOException e) {
+            System.out.println("Error occured while reading whatap token=" + e.getMessage());
         }
     }
     private void setLocalSSLContext() throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, KeyManagementException {
@@ -121,7 +147,7 @@ public class KubeApiClientTest extends Thread {
 
         // token path가 존재하지 않는 경우 return
         if (!Files.exists(caCrtPath)) {
-            System.out.println("Whatap token is not found");
+            System.out.println("caCrtPath is not found");
         } else {
             // token path가 존재하는 경우 값을 읽어온다.
             try {
@@ -155,7 +181,6 @@ public class KubeApiClientTest extends Thread {
             int iPort = Integer.parseInt(port);
             URI uri = new URI("https", null, host, iPort, null, null, null);
             String uriString = uri.toString();
-            System.out.println("uriString="+uriString);
             if (uriString != null) {
                 if (uriString.endsWith("/")) {
                     uriString = uriString.substring(0, uriString.length() - 1);
@@ -186,21 +211,22 @@ public class KubeApiClientTest extends Thread {
     @Override
     public void run() {
         while (true) {
-
-            if (this.basePath == null || this.localPodName == null || this.localNamespace == null || this.whatapToken == null || this.localSSLContext == null){
-                System.out.println("basePath=" + this.basePath);
-                System.out.println("localPodName=" + this.localPodName);
-                System.out.println("localNamespace=" + this.localNamespace);
+            System.out.println("basePath=" + this.basePath);
+            System.out.println("localPodName=" + this.localPodName);
+            System.out.println("localNamespace=" + this.localNamespace);
+            System.out.println("localSSLContext=" + this.localSSLContext);
+            if (this.whatapToken == null){
                 System.out.println("whatapToken=" + this.whatapToken);
-                System.out.println("localSSLContext=" + this.localSSLContext);
-                return;
+                this.setWhatapToken();
+                ThreadUtil.sleep(1000);
+                continue;
             }
+
             try {
                 process();
             } catch (Exception e) {
                 System.out.println("KubeApiClient.run() Error="+e.getMessage());
             }
-
             if (this.containerID != null){
                 System.out.println("already exist//containerID=" + this.containerID);
                 return;
@@ -248,11 +274,15 @@ public class KubeApiClientTest extends Thread {
 
         if (status != null) {
             JSONArray containerStatuses = status.optJSONArray("containerStatuses");
+            System.out.println("containerStatuses=" + containerStatuses);
             for (int i = 0; i < containerStatuses.length(); i++) {
                 JSONObject containerStatus = containerStatuses.optJSONObject(i);
+                System.out.println("containerStatus=" + containerStatus);
                 String containerName = containerStatus.getString("name");
                 String containerID = containerStatus.getString("containerID");
                 containerLookup.put(containerName, containerID);
+                System.out.println("containerName=" + containerName + "/// containerId=" + containerID);
+                System.out.println("containerLookup=" + containerLookup);
             }
         }
 
@@ -261,18 +291,19 @@ public class KubeApiClientTest extends Thread {
             for (int i = 0; i < containers.length(); i++) {
                 JSONObject container = containers.optJSONObject(i);
                 JSONArray envVariables = container.optJSONArray("env");
+                System.out.println("envVariables:" + envVariables);
                 for (int j = 0; j < envVariables.length(); j++) {
-                    JSONObject envObject = envVariables.optJSONObject(i);
+                    JSONObject envObject = envVariables.optJSONObject(j);
+                    System.out.println("envObjectTest:" + envObject);
                     String envName = envObject.getString("name");
                     String envValue = envObject.getString("value");
                     if ("get_apm_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
                         String containerName = container.getString("name");
+                        System.out.println("container.getString('name')=" + containerName);
                         String containerID = containerLookup.get(containerName);
                         String[] tokens = containerID.split("://");
                         if (tokens.length > 1) {
-                            String id = tokens[1];
-                            System.out.println("ContainerID: " + id);
-                            return id;
+                            return tokens[1];
                         } else {
                             System.out.println("Container parsing failed:" + containerID);
                         }
