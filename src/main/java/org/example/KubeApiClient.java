@@ -290,6 +290,7 @@ public class KubeApiClient extends Thread {
                 System.out.println("envVariables:" + envVariables);
                 for (int j = 0; j < envVariables.length(); j++) {
                     JSONObject envObject = envVariables.optJSONObject(i);
+                    System.out.println("envObjectTest:" + envObject);
                     String envName = envObject.getString("name");
                     String envValue = envObject.getString("value");
                     if ("get_apm_container_id_using_whatap".equalsIgnoreCase(envName) && "true".equalsIgnoreCase(envValue)) {
