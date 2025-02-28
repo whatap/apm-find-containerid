@@ -36,8 +36,10 @@ public class KubeApiClient extends Thread {
     private static final String WHATAP_TOKEN_PATH = "/whatap/token";
     private static final String LOCAL_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
     private static final String LOCAL_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
-    private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
-    private static final String KUBERNETES_SERVICE_PORT = "KUBERNETES_SERVICE_PORT";
+//    private static final String KUBERNETES_SERVICE_HOST = "KUBERNETES_SERVICE_HOST";
+//    private static final String KUBERNETES_SERVICE_PORT = "KUBERNETES_SERVICE_PORT";
+    private static final String KUBERNETES_SERVICE_HOST = "TEST_HOST";
+    private static final String KUBERNETES_SERVICE_PORT = "TEST_PORT";
 
     private String localNamespace = null;
     private String localPodName = null;
@@ -64,14 +66,17 @@ public class KubeApiClient extends Thread {
     private void init() {
         // kubernetes 내부 host 와 path 를 환경변수에서 가져옴
         String host = System.getenv(KUBERNETES_SERVICE_HOST);
-        String path = System.getenv(KUBERNETES_SERVICE_PORT);
-        if (host == null || path == null) {
+        String port = System.getenv(KUBERNETES_SERVICE_PORT);
+        host = "10.21.10.71";
+        port = "443";
+
+        if (host == null || port == null) {
             return;
         }
 
         // 기본적인 쿠버네티스 클러스터 구성 정보 설정
         // 파드 이름, api-server, 네임스페이스, token, caCrt
-        this.setBasePath(host, path);
+        this.setBasePath(host, port);
         this.setLocalPodName();
         this.setLocalNamespace();
         this.setWhatapToken();
