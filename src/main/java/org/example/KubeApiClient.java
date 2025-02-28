@@ -116,6 +116,12 @@ public class KubeApiClient extends Thread {
         }
     }
     private void setWhatapToken() {
+        String token = System.getenv("WHATAP_TOKEN");
+        if (token != null) {
+            this.whatapToken = token;
+            return;
+        }
+
         // apiserver에 요청하기 위해 필요한 데이터 path 가져오기 (token)
         Path tokenPath = Paths.get(WHATAP_TOKEN_PATH);
 
@@ -137,7 +143,7 @@ public class KubeApiClient extends Thread {
 
         // token path가 존재하지 않는 경우 return
         if (!Files.exists(caCrtPath)) {
-            System.out.println("Whatap token is not found");
+            System.out.println("caCrtPath is not found");
         } else {
             // token path가 존재하는 경우 값을 읽어온다.
             try {
