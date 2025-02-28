@@ -108,6 +108,8 @@ spec:
               containerPort: 6801
           command: ['/data/agent/node/cadvisor_helper', '-port','6801']
           env:
+            - name: overlay_config_path
+              value: /rootfs/hypercloud/lib/containers/storage/overlay-containers
             - name: NODE_NAME
               valueFrom:
                 fieldRef:

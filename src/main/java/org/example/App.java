@@ -10,7 +10,6 @@ public class App {
             useWhatapTokenEnv = "false";
         }
         String useWhatapTokenProperty = System.getProperty("get_apm_container_id_using_whatap", "false");
-
         System.out.println("useWhatapEnv="+useWhatapTokenEnv);
         System.out.println("useWhatapProperty="+useWhatapTokenProperty);
         try{
