@@ -32,7 +32,7 @@ public class KubeApiClient extends Thread {
 
     private static KubeApiClient instance = null;
 
-    //    public static final String SERVICEACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+    public static final String SERVICEACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token";
     private static final String WHATAP_TOKEN_PATH = "/whatap/token";
     private static final String LOCAL_CA_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
     private static final String LOCAL_NAMESPACE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/namespace";
@@ -114,18 +114,15 @@ public class KubeApiClient extends Thread {
         // apiserver에 요청하기 위해 필요한 데이터 path 가져오기 (token)
         Path tokenPath = Paths.get(WHATAP_TOKEN_PATH);
 
-        // token path가 존재하지 않는 경우 return
+        // token path가 존재하지 않는 경우 SERVICEACCOUNT_TOKEN_PATH 사용
         if (!Files.exists(tokenPath)) {
-            System.out.println("Whatap token is not found");
-        } else {
-            // token path가 존재하는 경우 값을 읽어온다.
-            try {
-                this.whatapToken = new String(Files.readAllBytes(tokenPath));
-            } catch (IOException e) {
-                System.out.println("Error occured while reading whatap token=" + e.getMessage());
-                return;
-            }
-            System.out.println("WHATAP token=" + this.whatapToken);
+            System.out.println("Whatap token is not found// use SERVICEACCOUNT_TOKEN_PATH");
+            tokenPath = Paths.get(SERVICEACCOUNT_TOKEN_PATH);
+        }
+        try {
+            this.whatapToken = new String(Files.readAllBytes(tokenPath));
+        } catch (IOException e) {
+            System.out.println("Error occured while reading whatap token=" + e.getMessage());
         }
     }
     private void setLocalSSLContext() throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, KeyManagementException {
@@ -199,13 +196,10 @@ public class KubeApiClient extends Thread {
     @Override
     public void run() {
         while (true) {
-            if (this.basePath == null || this.localPodName == null || this.localNamespace == null || this.localSSLContext == null){
-                System.out.println("basePath=" + this.basePath);
-                System.out.println("localPodName=" + this.localPodName);
-                System.out.println("localNamespace=" + this.localNamespace);
-                System.out.println("localSSLContext=" + this.localSSLContext);
-                return;
-            }
+            System.out.println("basePath=" + this.basePath);
+            System.out.println("localPodName=" + this.localPodName);
+            System.out.println("localNamespace=" + this.localNamespace);
+            System.out.println("localSSLContext=" + this.localSSLContext);
             if (this.whatapToken == null){
                 System.out.println("whatapToken=" + this.whatapToken);
                 this.setWhatapToken();

@@ -4,7 +4,7 @@ import whatap.util.ThreadUtil;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("start main");
+        System.out.println("start main-3.0.3");
         String useWhatapTokenEnv = System.getenv("get_apm_container_id_using_whatap");
         if (useWhatapTokenEnv == null){
             useWhatapTokenEnv = "false";
